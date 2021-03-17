@@ -26,10 +26,7 @@ client.on("message", async (message) => {
     if (!message.content.startsWith(prefix)) return;
 
     const voiceChannel = message.member.voice.channel;
-    if (!voiceChannel)
-        return message.channel.send(
-            "You need to be in a voice channel to play music!"
-        );
+    if (!voiceChannel) return message.channel.send("join the channel dumbo");
 
     if (!queue.get(message.guild.id)) {
         const queueContruct = {
@@ -38,7 +35,8 @@ client.on("message", async (message) => {
             connection: null,
             songs: [],
             volume: 5,
-            playing: true,
+            playing: false,
+            player: null,
         };
 
         queue.set(message.guild.id, queueContruct);
@@ -47,19 +45,28 @@ client.on("message", async (message) => {
     let serverQueue = queue.get(message.guild.id);
 
     if (message.content.startsWith(`${prefix}play`)) {
-        playSongs(message, serverQueue);
+        if (serverQueue.player !== null) {
+            serverQueue.player.resume();
+        } else {
+            playSongs(message, serverQueue);
+        }
+
         return;
     } else if (message.content.startsWith(`${prefix}skip`)) {
         skip(message, serverQueue);
+        return;
+    } else if (message.content.startsWith(`${prefix}pause`)) {
+        serverQueue.player.pause();
         return;
     } else if (message.content.startsWith(`${prefix}stop`)) {
         stop(message, serverQueue);
         return;
     } else if (message.content.startsWith(`${prefix}queue`)) {
         let queue = "";
-        let i = 0;
-        for (const song of serverQueue) {
-            queue += `${i}- ${song.title}\n`;
+        let i = 1;
+        for (const song of serverQueue.songs) {
+            queue += `${i} - ${song.title}\n`;
+            i++;
         }
         message.channel.send(queue);
     } else {
@@ -82,12 +89,15 @@ async function playSongs(message, serverQueue) {
         rawSongs.push(userUrl);
     }
 
-    let firstSong = await parseRawSong(rawSongs.shift());
-    try {
-        play(message.guild, firstSong);
-    } catch (err) {
-        console.log(err);
-        return message.channel.send(err);
+    if (serverQueue.songs.length == 0 && serverQueue.playing == false) {
+        let firstSong = await parseRawSong(rawSongs.shift());
+        try {
+            play(message.guild, firstSong);
+            serverQueue.playing = true;
+        } catch (err) {
+            console.log(err);
+            return message.channel.send(err);
+        }
     }
 
     for (const rawSong of rawSongs) {
@@ -111,22 +121,16 @@ async function parseRawSong(rawSong, serverQueue) {
 
 function skip(message, serverQueue) {
     if (!message.member.voice.channel)
-        return message.channel.send(
-            "You have to be in a voice channel to stop the music!"
-        );
-    if (!serverQueue)
-        return message.channel.send("There is no song that I could skip!");
+        return message.channel.send("join the voice channel first pls");
+    if (!serverQueue) return message.channel.send("skip what G?");
     serverQueue.connection.dispatcher.end();
 }
 
 function stop(message, serverQueue) {
     if (!message.member.voice.channel)
-        return message.channel.send(
-            "You have to be in a voice channel to stop the music!"
-        );
+        return message.channel.send("do not disturb them son");
 
-    if (!serverQueue)
-        return message.channel.send("There is no song that I could stop!");
+    if (!serverQueue) return message.channel.send("are you dumb");
 
     serverQueue.songs = [];
     serverQueue.connection.dispatcher.end();
@@ -143,10 +147,10 @@ function play(guild, song) {
     const dispatcher = serverQueue.connection
         .play(ytdl(song.url))
         .on("finish", () => {
-            serverQueue.songs.shift();
-            play(guild, serverQueue.songs[0]);
+            play(guild, serverQueue.songs.shift());
         })
         .on("error", (error) => console.error(error));
+    serverQueue.player = dispatcher;
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
     serverQueue.textChannel.send(`Start playing: **${song.title}**`);
 }

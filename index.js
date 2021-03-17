@@ -2,6 +2,8 @@ const Discord = require("discord.js");
 const { prefix, token } = require("./config.json");
 const ytdl = require("ytdl-core");
 const yts = require("yt-search");
+const axios = require("axios").default;
+const $ = require("cheerio");
 
 const client = new Discord.Client();
 
@@ -23,50 +25,13 @@ client.on("message", async (message) => {
     if (message.author.bot) return;
     if (!message.content.startsWith(prefix)) return;
 
-    const serverQueue = queue.get(message.guild.id);
-
-    if (message.content.startsWith(`${prefix}play`)) {
-        execute(message, serverQueue);
-        return;
-    } else if (message.content.startsWith(`${prefix}skip`)) {
-        skip(message, serverQueue);
-        return;
-    } else if (message.content.startsWith(`${prefix}stop`)) {
-        stop(message, serverQueue);
-        return;
-    } else {
-        message.channel.send("You need to enter a valid command!");
-    }
-});
-
-async function execute(message, serverQueue) {
-    let command = message.content;
-    let url = command.substr(command.indexOf(" ") + 1);
-
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
         return message.channel.send(
             "You need to be in a voice channel to play music!"
         );
-    const permissions = voiceChannel.permissionsFor(message.client.user);
-    if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-        return message.channel.send(
-            "I need the permissions to join and speak in your voice channel!"
-        );
-    }
 
-    if (!validURL(url)) {
-        let ytVideo = (await yts(url)).videos[0];
-        url = ytVideo.url;
-    }
-
-    const songInfo = await ytdl.getInfo(url);
-    const song = {
-        title: songInfo.videoDetails.title,
-        url: songInfo.videoDetails.video_url,
-    };
-
-    if (!serverQueue) {
+    if (!queue.get(message.guild.id)) {
         const queueContruct = {
             textChannel: message.channel,
             voiceChannel: voiceChannel,
@@ -77,24 +42,71 @@ async function execute(message, serverQueue) {
         };
 
         queue.set(message.guild.id, queueContruct);
-
-        queueContruct.songs.push(song);
-
-        try {
-            var connection = await voiceChannel.join();
-            queueContruct.connection = connection;
-            play(message.guild, queueContruct.songs[0]);
-        } catch (err) {
-            console.log(err);
-            queue.delete(message.guild.id);
-            return message.channel.send(err);
-        }
-    } else {
-        serverQueue.songs.push(song);
-        return message.channel.send(
-            `${song.title} has been added to the queue!`
-        );
     }
+
+    let serverQueue = queue.get(message.guild.id);
+
+    if (message.content.startsWith(`${prefix}play`)) {
+        playSongs(message, serverQueue);
+        return;
+    } else if (message.content.startsWith(`${prefix}skip`)) {
+        skip(message, serverQueue);
+        return;
+    } else if (message.content.startsWith(`${prefix}stop`)) {
+        stop(message, serverQueue);
+        return;
+    } else if (message.content.startsWith(`${prefix}queue`)) {
+        let queue = "";
+        let i = 0;
+        for (const song of serverQueue) {
+            queue += `${i}- ${song.title}\n`;
+        }
+        message.channel.send(queue);
+    } else {
+        message.channel.send("bruh tf did you write??");
+    }
+});
+
+async function playSongs(message, serverQueue) {
+    let command = message.content;
+    let userUrl = command.substr(command.indexOf(" ") + 1);
+
+    var connection = await serverQueue.voiceChannel.join();
+    serverQueue.connection = connection;
+
+    let rawSongs = [];
+
+    if (userUrl.includes("anghami") && userUrl.includes("playlist")) {
+        rawSongs = await getAnghamiPlaylist(userUrl);
+    } else {
+        rawSongs.push(userUrl);
+    }
+
+    let firstSong = await parseRawSong(rawSongs.shift());
+    try {
+        play(message.guild, firstSong);
+    } catch (err) {
+        console.log(err);
+        return message.channel.send(err);
+    }
+
+    for (const rawSong of rawSongs) {
+        let song = await parseRawSong(rawSong);
+        serverQueue.songs.push(song);
+    }
+}
+
+async function parseRawSong(rawSong, serverQueue) {
+    let url = rawSong;
+
+    let ytVideo = (await yts(url)).videos[0];
+
+    const song = {
+        title: ytVideo.title,
+        url: ytVideo.url,
+    };
+
+    return song;
 }
 
 function skip(message, serverQueue) {
@@ -139,17 +151,28 @@ function play(guild, song) {
     serverQueue.textChannel.send(`Start playing: **${song.title}**`);
 }
 
-function validURL(str) {
-    var pattern = new RegExp(
-        "^(https?:\\/\\/)?" + // protocol
-            "((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|" + // domain name
-            "((\\d{1,3}\\.){3}\\d{1,3}))" + // OR ip (v4) address
-            "(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*" + // port and path
-            "(\\?[;&a-z\\d%_.~+=-]*)?" + // query string
-            "(\\#[-a-z\\d_]*)?$",
-        "i"
-    ); // fragment locator
-    return !!pattern.test(str);
-}
+const getAnghamiPlaylist = async (anghamiPlaylistUrl) => {
+    try {
+        const anghamiPlaylist = [];
+        const html = await (await axios.get(anghamiPlaylistUrl)).data;
+        let numberOfSongs = $(".table .table-row", html).length;
+
+        for (let i = 0; i < numberOfSongs; i++) {
+            let songTitle = $(
+                $(".table .table-row .cell-title span", html)[i]
+            ).text();
+            let songArtist = $(
+                $(".table .table-row .cell-artist a", html)[i]
+            ).text();
+
+            let songData = songTitle + " " + songArtist;
+            anghamiPlaylist.push(songData);
+        }
+
+        return anghamiPlaylist;
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 client.login(token);

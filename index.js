@@ -104,7 +104,7 @@ client.on("message", async (message) => {
     ) {
         let queue = "";
         if (isMoussa) {
-            queue = message.channel.send("here's the best song list ever:\n");
+            queue = "here's the best song list ever:\n";
         } else {
             queue = "here's your shit song list:\n";
         }

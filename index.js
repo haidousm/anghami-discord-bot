@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const { prefix, token } = require("./config.json");
 const ytdl = require("ytdl-core");
+const yts = require("yt-search");
 
 const client = new Discord.Client();
 
@@ -39,7 +40,8 @@ client.on("message", async (message) => {
 });
 
 async function execute(message, serverQueue) {
-    const args = message.content.split(" ");
+    let command = message.content;
+    let url = command.substr(command.indexOf(" ") + 1);
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel)
@@ -53,9 +55,9 @@ async function execute(message, serverQueue) {
         );
     }
 
-    let url = args[1];
     if (!validURL(url)) {
-        url = "https://www.youtube.com/watch?v=DKuDnvi81iY";
+        let ytVideo = (await yts(url)).videos[0];
+        url = ytVideo.url;
     }
 
     const songInfo = await ytdl.getInfo(url);

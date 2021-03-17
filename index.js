@@ -119,13 +119,14 @@ client.on("message", async (message) => {
     } else if (message.content.startsWith(`${prefix}shuffle`)) {
         if (isMoussa) {
             message.channel.send(
-                "im super excited to see what song ill get to play for you<3:\n"
+                "im super excited to see what song ill get to play for you<3\n"
             );
         } else {
             message.channel.send("no shuffling will fix your ass music taste");
         }
 
         serverQueue.songs = shuffle(serverQueue.songs);
+        skip(message, serverQueue);
         return;
     } else {
         message.channel.send("bruh tf did you write??");

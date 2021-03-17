@@ -47,18 +47,20 @@ client.on("message", async (message) => {
     if (message.content.startsWith(`${prefix}play`)) {
         if (serverQueue.player !== null) {
             serverQueue.player.resume();
+            message.channel.send("ok im resuming");
         } else {
             playSongs(message, serverQueue);
         }
-
         return;
     } else if (message.content.startsWith(`${prefix}skip`)) {
         skip(message, serverQueue);
         return;
     } else if (message.content.startsWith(`${prefix}pause`)) {
+        message.channel.send("ugh ok i paused");
         serverQueue.player.pause();
         return;
     } else if (message.content.startsWith(`${prefix}stop`)) {
+        message.channel.send("bye bitch");
         stop(message, serverQueue);
         return;
     } else if (message.content.startsWith(`${prefix}queue`)) {
@@ -69,6 +71,9 @@ client.on("message", async (message) => {
             i++;
         }
         message.channel.send(queue);
+    } else if (message.content.startsWith(`${prefix}shuffle`)) {
+        serverQueue.songs = shuffle(serverQueue.songs);
+        return;
     } else {
         message.channel.send("bruh tf did you write??");
     }
@@ -152,7 +157,7 @@ function play(guild, song) {
         .on("error", (error) => console.error(error));
     serverQueue.player = dispatcher;
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    serverQueue.textChannel.send(`Start playing: **${song.title}**`);
+    serverQueue.textChannel.send(`im playing this shit song **${song.title}**`);
 }
 
 const getAnghamiPlaylist = async (anghamiPlaylistUrl) => {
@@ -178,5 +183,13 @@ const getAnghamiPlaylist = async (anghamiPlaylistUrl) => {
         console.error(err);
     }
 };
+
+const shuffle = (arr) =>
+    [...arr].reduceRight(
+        (res, _, __, s) => (
+            res.push(s.splice(0 | (Math.random() * s.length), 1)[0]), res
+        ),
+        []
+    );
 
 client.login(token);

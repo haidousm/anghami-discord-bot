@@ -1,0 +1,15 @@
+{
+  "name": "anghami-bot",
+  "version": "1.0.0",
+  "description": "rythm but for anghami",
+  "main": "index.js",
+  "scripts": {
+    "run": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Moussa Haidous",
+  "license": "ISC",
+  "dependencies": {
+    "yt-search": "^2.7.4"
+  }
+}

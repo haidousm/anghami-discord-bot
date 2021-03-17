@@ -52,10 +52,18 @@ client.on("message", async (message) => {
             playSongs(message, serverQueue);
         }
         return;
-    } else if (message.content.startsWith(`${prefix}skip`)) {
+    } else if (
+        message.content.startsWith(`${prefix}skip`) ||
+        message.content.startsWith(`${prefix}s`) ||
+        message.content.startsWith(`${prefix}fs`)
+    ) {
+        message.channel.send("thank fuck i couldnt bare it anymore");
         skip(message, serverQueue);
         return;
-    } else if (message.content.startsWith(`${prefix}pause`)) {
+    } else if (
+        message.content.startsWith(`${prefix}pause`) ||
+        message.content.startsWith(`${prefix}p`)
+    ) {
         message.channel.send("ugh ok i paused");
         serverQueue.player.pause();
         return;
@@ -63,15 +71,20 @@ client.on("message", async (message) => {
         message.channel.send("bye bitch");
         stop(message, serverQueue);
         return;
-    } else if (message.content.startsWith(`${prefix}queue`)) {
-        let queue = "";
+    } else if (
+        message.content.startsWith(`${prefix}queue`) ||
+        message.content.startsWith(`${prefix}q`)
+    ) {
+        let queue = "here's your shit song list:\n";
         let i = 1;
         for (const song of serverQueue.songs) {
             queue += `${i} - ${song.title}\n`;
             i++;
         }
         message.channel.send(queue);
+        return;
     } else if (message.content.startsWith(`${prefix}shuffle`)) {
+        message.channel.send("no shuffling will fix your ass music taste");
         serverQueue.songs = shuffle(serverQueue.songs);
         return;
     } else {

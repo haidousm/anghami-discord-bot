@@ -66,7 +66,6 @@ client.on("message", async (message) => {
         return;
     } else if (
         message.content.startsWith(`${prefix}skip`) ||
-        message.content.startsWith(`${prefix}s`) ||
         message.content.startsWith(`${prefix}fs`)
     ) {
         if (isMoussa) {
@@ -212,7 +211,15 @@ function play(guild, song, isMoussa) {
     serverQueue.player = dispatcher;
     dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
 
-    serverQueue.textChannel.send(`im playing this shit song **${song.title}**`);
+    if (isMoussa) {
+        serverQueue.textChannel.send(
+            `im playing this amazing song **${song.title}**`
+        );
+    } else {
+        serverQueue.textChannel.send(
+            `im playing this shit song **${song.title}**`
+        );
+    }
 }
 
 const getAnghamiPlaylist = async (anghamiPlaylistUrl) => {

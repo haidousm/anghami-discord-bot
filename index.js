@@ -27,7 +27,7 @@ client.on("message", async (message) => {
 
     let isMoussa = false;
 
-    if (message.member.id == "214795495854440448") {
+    if (message.member.id == "XXXXXX") {
         isMoussa = true;
     }
 

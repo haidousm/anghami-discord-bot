@@ -51,8 +51,9 @@ client.on("message", async (message) => {
     let serverQueue = queue.get(message.guild.id);
 
     if (message.content.startsWith(`${prefix}play`)) {
-        if (serverQueue.player !== null) {
+        if (serverQueue.player !== null && !serverQueue.playing) {
             serverQueue.player.resume();
+            serverQueue.playing = true;
             if (isMoussa) {
                 message.channel.send(
                     "has anyone ever told you that you have an amazing music taste??"
@@ -88,6 +89,7 @@ client.on("message", async (message) => {
         }
 
         serverQueue.player.pause();
+        serverQueue.playing = false;
         return;
     } else if (message.content.startsWith(`${prefix}stop`)) {
         if (isMoussa) {

@@ -27,7 +27,7 @@ client.on("message", async (message) => {
 
     let isMoussa = false;
 
-    if (message.member.id == "XXXXXX") {
+    if (message.member.id == process.env.DISCORD_MOUSSA_ID) {
         isMoussa = true;
     }
 

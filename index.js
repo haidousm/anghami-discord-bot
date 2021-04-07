@@ -228,7 +228,13 @@ function play(guild, song, isMoussa) {
 const getAnghamiPlaylist = async (anghamiPlaylistUrl) => {
     try {
         const anghamiPlaylist = [];
-        const html = await (await axios.get(anghamiPlaylistUrl)).data;
+
+        try {
+            const _ = await axios.get(anghamiPlaylistUrl);
+        } catch (error) {
+            console.log(error);
+        }
+        const html = await _.data;
         let numberOfSongs = $(".table .table-row", html).length;
 
         for (let i = 0; i < numberOfSongs; i++) {

@@ -144,7 +144,10 @@ async function playSongs(message, serverQueue, isMoussa) {
 
     let rawSongs = [];
 
-    if (userUrl.includes("anghami") && userUrl.includes("playlist")) {
+    if (
+        userUrl.includes("anghami") &&
+        (userUrl.includes("playlist") || userUrl.includes("album"))
+    ) {
         rawSongs = await getAnghamiPlaylist(userUrl);
     } else {
         rawSongs.push(userUrl);

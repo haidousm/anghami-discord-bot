@@ -50,7 +50,23 @@ client.on("message", async (message) => {
 
     let serverQueue = queue.get(message.guild.id);
 
-    if (message.content.startsWith(`${prefix}play`)) {
+    if (message.content.startsWith(`${prefix}tightrope`)) {
+        if (serverQueue.player !== null && !serverQueue.playing) {
+            serverQueue.player.resume();
+            serverQueue.playing = true;
+            message = "tightrope LP";
+            if (isMoussa) {
+                message.channel.send(
+                    "has anyone ever told you that you have an amazing music taste??"
+                );
+            } else {
+                message.channel.send("ok im resuming");
+            }
+        } else {
+            playSongs(message, serverQueue, isMoussa);
+        }
+        return;
+    } else if (message.content.startsWith(`${prefix}play`)) {
         if (serverQueue.player !== null && !serverQueue.playing) {
             serverQueue.player.resume();
             serverQueue.playing = true;

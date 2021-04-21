@@ -54,7 +54,7 @@ client.on("message", async (message) => {
         if (serverQueue.player !== null && !serverQueue.playing) {
             serverQueue.player.resume();
             serverQueue.playing = true;
-            message = "tightrope LP";
+            message = "!!play tightrope by LP";
             if (isMoussa) {
                 message.channel.send(
                     "has anyone ever told you that you have an amazing music taste??"

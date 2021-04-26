@@ -162,7 +162,9 @@ async function playSongs(message, serverQueue, isMoussa) {
 
     if (
         userUrl.includes("anghami") &&
-        (userUrl.includes("playlist") || userUrl.includes("album"))
+        (userUrl.includes("playlist") ||
+            userUrl.includes("album") ||
+            userUrl.includes("artist"))
     ) {
         rawSongs = await getAnghamiPlaylist(userUrl);
     } else {
